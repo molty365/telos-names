@@ -776,4 +776,5 @@ body::before {
 }
 .logo .gradient-text {
     line-height: 1;
+    margin-bottom: 10px;
 }
