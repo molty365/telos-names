@@ -159,15 +159,36 @@ async function fetchFromRPC(endpoint, body) {
 
 async function loadActiveBids() {
     try {
-        const result = await fetchFromRPC('chain/get_table_rows', {
-            json: true,
-            code: EOSIO_CONTRACT,
-            scope: EOSIO_CONTRACT,
-            table: 'namebids',
-            limit: 100
-        });
+        let allRows = [];
+        let more = true;
+        let lowerBound = '';
+        
+        while (more) {
+            const result = await fetchFromRPC('chain/get_table_rows', {
+                json: true,
+                code: EOSIO_CONTRACT,
+                scope: EOSIO_CONTRACT,
+                table: 'namebids',
+                limit: 500,
+                lower_bound: lowerBound
+            });
+            
+            const rows = result.rows || [];
+            if (rows.length === 0) break;
+            
+            // Avoid duplicates when paginating
+            if (lowerBound && rows.length > 0 && rows[0].newname === lowerBound) {
+                rows.shift();
+            }
+            
+            allRows = allRows.concat(rows);
+            more = result.more;
+            if (rows.length > 0) {
+                lowerBound = rows[rows.length - 1].newname;
+            }
+        }
 
-        state.activeBids = result.rows || [];
+        state.activeBids = allRows;
         renderActiveBids();
     } catch (error) {
         console.error('Failed to load active bids:', error);
@@ -182,7 +203,7 @@ async function loadMyBids() {
     try {
         // Filter active bids for current user
         state.myBids = state.activeBids.filter(bid => 
-            bid.highest_bidder === state.account
+            bid.high_bidder === state.account
         );
         renderMyBids();
     } catch (error) {
@@ -240,7 +261,7 @@ async function searchName() {
             resultHTML = `
                 <div class="bid-card">
                     <div class="bid-name">${bidData.newname}</div>
-                    <div class="bid-amount">Current bid: ${formatTLOS(bidData.high_bid)}</div>
+                    <div class="bid-amount">Current bid: ${formatBidAmount(bidData.high_bid)}</div>
                     <div class="bid-time">Time left: ${timeLeft}</div>
                     <div class="bid-actions">
                         <button class="btn btn-primary" onclick="openBidModal('${bidData.newname}')">
@@ -292,10 +313,10 @@ async function searchBidHistory() {
                 <div class="history-item">
                     <div class="history-header">
                         <span class="history-name">${currentBid.newname}</span>
-                        <span>${formatTLOS(currentBid.high_bid)}</span>
+                        <span>${formatBidAmount(currentBid.high_bid)}</span>
                     </div>
                     <div class="history-details">
-                        Bidder: ${currentBid.highest_bidder}<br>
+                        Bidder: ${currentBid.high_bidder}<br>
                         Last bid: ${new Date(currentBid.last_bid_time + 'Z').toLocaleString()}
                     </div>
                 </div>
@@ -344,10 +365,10 @@ function updateBidModalInfo(bidData) {
     const bidAmountInput = document.getElementById('bidAmount');
     
     if (bidData) {
-        const currentBid = parseFloat(bidData.high_bid.split(' ')[0]);
+        const currentBid = Math.abs(bidData.high_bid) / 10000;
         const minimumBid = Math.ceil(currentBid * 1.1 * 10000) / 10000; // 10% higher, rounded
         
-        currentBidEl.textContent = bidData.high_bid;
+        currentBidEl.textContent = formatBidAmount(bidData.high_bid);
         minimumBidEl.textContent = `${minimumBid.toFixed(4)} TLOS`;
         timeRemainingEl.textContent = getTimeRemaining(bidData.last_bid_time);
         
@@ -449,6 +470,19 @@ function closeBidModal() {
 }
 
 // Rendering Functions
+function formatBidAmount(highBid) {
+    // high_bid is an integer in units of 0.0001 TLOS
+    // Negative means auction was claimed/ended
+    const raw = typeof highBid === 'number' ? highBid : parseInt(highBid);
+    const amount = Math.abs(raw) / 10000;
+    return `${amount.toFixed(4)} TLOS`;
+}
+
+function isBidClaimed(highBid) {
+    const raw = typeof highBid === 'number' ? highBid : parseInt(highBid);
+    return raw < 0;
+}
+
 function renderActiveBids() {
     const container = document.getElementById('activeBids');
     
@@ -457,18 +491,28 @@ function renderActiveBids() {
         return;
     }
 
-    const html = state.activeBids.map(bid => {
+    // Sort: active auctions first, then by bid amount descending
+    const sorted = [...state.activeBids].sort((a, b) => {
+        const aClaimed = isBidClaimed(a.high_bid);
+        const bClaimed = isBidClaimed(b.high_bid);
+        if (aClaimed !== bClaimed) return aClaimed ? 1 : -1;
+        return Math.abs(b.high_bid) - Math.abs(a.high_bid);
+    });
+
+    const html = sorted.map(bid => {
         const timeLeft = getTimeRemaining(bid.last_bid_time);
-        const isMyBid = state.connected && bid.highest_bidder === state.account;
+        const claimed = isBidClaimed(bid.high_bid);
+        const isMyBid = state.connected && bid.high_bidder === state.account;
+        const statusClass = claimed ? 'claimed' : '';
         
         return `
-            <div class="bid-card ${isMyBid ? 'my-bid' : ''}">
+            <div class="bid-card ${isMyBid ? 'my-bid' : ''} ${statusClass}">
                 <div class="bid-name">${bid.newname}</div>
-                <div class="bid-amount">${bid.high_bid}</div>
-                <div class="bid-time">Time left: ${timeLeft}</div>
-                <div class="bid-time text-muted">Bidder: ${bid.highest_bidder}</div>
+                <div class="bid-amount">${formatBidAmount(bid.high_bid)}</div>
+                <div class="bid-time">${claimed ? 'Claimed' : `Time left: ${timeLeft}`}</div>
+                <div class="bid-time text-muted">Bidder: ${bid.high_bidder || 'unknown'}</div>
                 <div class="bid-actions">
-                    ${state.connected ? `
+                    ${state.connected && !claimed ? `
                         <button class="btn btn-primary" onclick="openBidModal('${bid.newname}')">
                             ${isMyBid ? 'Increase Bid' : 'Place Bid'}
                         </button>
@@ -501,7 +545,7 @@ function renderMyBids() {
         return `
             <div class="bid-card my-bid">
                 <div class="bid-name">${bid.newname}</div>
-                <div class="bid-amount">${bid.high_bid}</div>
+                <div class="bid-amount">${formatBidAmount(bid.high_bid)}</div>
                 <div class="bid-time ${isWinning ? 'text-success' : ''}">
                     ${isWinning ? 'Won!' : `Time left: ${timeLeft}`}
                 </div>
