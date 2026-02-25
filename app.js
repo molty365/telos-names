@@ -55,41 +55,48 @@ function initializeUI() {
     document.getElementById('bidAmount').addEventListener('input', validateBidAmount);
 }
 
-// Wallet Connection
+// Wallet Connection (Anchor Link)
+let anchorLink = null;
+
+function initAnchorLink() {
+    const transport = new AnchorLinkBrowserTransport();
+    anchorLink = new AnchorLink({
+        transport,
+        chains: [{
+            chainId: '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11',
+            nodeUrl: TELOS_RPC
+        }]
+    });
+}
+
 async function connectWallet() {
     try {
         showStatus('Connecting to wallet...', 'info');
         
-        const ui = new WebRenderer({
-            appName: 'Telos Names',
-            chains: [
-                {
-                    id: '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11',
-                    url: TELOS_RPC
-                }
-            ]
-        });
-
-        const result = await ui.login();
+        if (!anchorLink) initAnchorLink();
         
-        if (result && result.session) {
-            state.session = result.session;
-            state.connected = true;
-            state.account = result.session.actor;
-            
-            updateWalletUI();
-            await loadMyBids();
-            showStatus('Wallet connected successfully!', 'success');
-        }
+        const identity = await anchorLink.login('telosnames');
+        
+        state.session = identity.session;
+        state.connected = true;
+        state.account = String(identity.session.auth.actor);
+        
+        updateWalletUI();
+        await loadMyBids();
+        showStatus('Wallet connected successfully!', 'success');
     } catch (error) {
         console.error('Wallet connection failed:', error);
-        showStatus('Failed to connect wallet. Please try again.', 'error');
+        if (error.message && error.message.includes('cancel')) {
+            showStatus('Wallet connection cancelled', 'info');
+        } else {
+            showStatus('Failed to connect wallet. Please try again.', 'error');
+        }
     }
 }
 
 async function disconnectWallet() {
-    if (state.session) {
-        await state.session.logout();
+    if (anchorLink && state.session) {
+        await anchorLink.removeSession('telosnames', state.session.auth);
     }
     
     state.session = null;
@@ -436,7 +443,7 @@ async function submitBid() {
             }
         }];
 
-        const result = await state.session.transact({ actions });
+        const result = await state.session.transact({ actions }, { broadcast: true });
         
         showStatus('Bid placed successfully!', 'success');
         closeBidModal();
