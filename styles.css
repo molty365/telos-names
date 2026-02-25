@@ -670,3 +670,56 @@ body::before {
 @media (max-width: 768px) {
     .logo-img { height: 24px; }
 }
+
+/* How It Works */
+.how-it-works {
+    margin: 2rem 0;
+    text-align: center;
+}
+.how-it-works h3 {
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #00F2FE, #4FACFE, #C471F5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+.step {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: border-color 0.3s;
+}
+.step:hover {
+    border-color: rgba(0,242,254,0.3);
+}
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00F2FE, #4FACFE);
+    color: #000;
+    font-weight: 700;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+}
+.step-text {
+    font-size: 0.9rem;
+    color: #ccc;
+    line-height: 1.5;
+}
+.step-text strong {
+    color: #fff;
+    font-size: 1rem;
+}
