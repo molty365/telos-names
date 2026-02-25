@@ -59,6 +59,8 @@ function initializeUI() {
 let anchorLink = null;
 
 function initAnchorLink() {
+    const AnchorLink = TelosWallet.AnchorLink;
+    const AnchorLinkBrowserTransport = TelosWallet.AnchorLinkBrowserTransport;
     const transport = new AnchorLinkBrowserTransport();
     anchorLink = new AnchorLink({
         transport,

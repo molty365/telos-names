@@ -1,0 +1,5 @@
+node_modules/
+build-wallet.js
+wallet-src.js
+package.json
+package-lock.json
