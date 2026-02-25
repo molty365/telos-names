@@ -763,3 +763,19 @@ body::before {
     color: #fff;
     font-size: 1rem;
 }
+
+/* Logo inline alignment */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+.logo .logo-img {
+    height: 36px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+.logo .gradient-text {
+    line-height: 1;
+    vertical-align: middle;
+}
