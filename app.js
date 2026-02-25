@@ -248,8 +248,9 @@ async function searchName() {
         // Check if account exists
         let accountExists = false;
         try {
-            await fetchFromRPC('chain/get_account', { account_name: name });
-            accountExists = true;
+            const acctResult = await fetchFromRPC('chain/get_account', { account_name: name });
+            // If the response has account_name and no error, account exists
+            accountExists = !!(acctResult && acctResult.account_name && !acctResult.error);
         } catch {
             // Account doesn't exist
         }
