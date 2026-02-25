@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telos Name Auctions - Zero Premium Names</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <h1 class="logo">
+                    <span class="gradient-text">Telos Names</span>
+                </h1>
+                <div class="header-actions">
+                    <button id="connectWallet" class="btn btn-primary">
+                        <span id="walletText">Connect Wallet</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <!-- Hero Section -->
+                <section class="hero">
+                    <h2>Secure Your Premium Telos Account Name</h2>
+                    <p>Bid on short account names (&lt;12 characters) through the official Telos auction system</p>
+                </section>
+
+                <!-- Search Section -->
+                <section class="search-section">
+                    <div class="search-container">
+                        <input type="text" id="nameSearch" placeholder="Search account names..." maxlength="11">
+                        <button id="searchBtn" class="btn btn-secondary">Search</button>
+                    </div>
+                    <div id="searchResult" class="search-result"></div>
+                </section>
+
+                <!-- Navigation Tabs -->
+                <nav class="tabs">
+                    <button class="tab-btn active" data-tab="browse">Browse Active Bids</button>
+                    <button class="tab-btn" data-tab="mybids">My Bids</button>
+                    <button class="tab-btn" data-tab="history">Bid History</button>
+                </nav>
+
+                <!-- Content Sections -->
+                <div class="content">
+                    <!-- Browse Active Bids -->
+                    <section id="browse" class="tab-content active">
+                        <div class="section-header">
+                            <h3>Active Name Auctions</h3>
+                            <button id="refreshBids" class="btn btn-outline">Refresh</button>
+                        </div>
+                        <div id="activeBids" class="bids-grid">
+                            <div class="loading">Loading active bids...</div>
+                        </div>
+                    </section>
+
+                    <!-- My Bids -->
+                    <section id="mybids" class="tab-content">
+                        <div class="section-header">
+                            <h3>My Active Bids</h3>
+                        </div>
+                        <div id="myBidsList" class="bids-grid">
+                            <div class="empty-state">Connect your wallet to see your bids</div>
+                        </div>
+                    </section>
+
+                    <!-- Bid History -->
+                    <section id="history" class="tab-content">
+                        <div class="section-header">
+                            <h3>Bid History</h3>
+                            <input type="text" id="historySearch" placeholder="Enter account name" maxlength="11">
+                            <button id="historySearchBtn" class="btn btn-secondary">Search History</button>
+                        </div>
+                        <div id="bidHistory" class="history-list">
+                            <div class="empty-state">Search for a name to see its bid history</div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bid Modal -->
+        <div id="bidModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Place Bid for <span id="modalNameDisplay"></span></h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="bid-info">
+                        <div class="info-row">
+                            <span>Current Highest Bid:</span>
+                            <span id="currentBid">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Minimum Next Bid (10% higher):</span>
+                            <span id="minimumBid">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Time Remaining:</span>
+                            <span id="timeRemaining">-</span>
+                        </div>
+                    </div>
+                    <div class="bid-form">
+                        <label for="bidAmount">Your Bid Amount (TLOS)</label>
+                        <input type="number" id="bidAmount" step="0.0001" min="0" placeholder="Enter bid amount">
+                        <button id="submitBid" class="btn btn-primary full-width">Place Bid</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overlay -->
+        <div id="overlay" class="overlay"></div>
+
+        <!-- Status Messages -->
+        <div id="statusContainer" class="status-container"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@wharfkit/web-renderer@1.0.0/lib/web-renderer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@wharfkit/account-creation-plugin-magic@1.0.0/lib/account-creation-plugin-magic.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
