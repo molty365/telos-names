@@ -661,3 +661,12 @@ body::before {
 .text-muted {
     color: var(--text-secondary) !important;
 }.bid-card.claimed { opacity: 0.5; }
+
+.logo-img {
+    height: 32px;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+@media (max-width: 768px) {
+    .logo-img { height: 24px; }
+}
